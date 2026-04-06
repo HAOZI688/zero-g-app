@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero-G 健身助手 - 登录</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #fff;
+}
+.login-box {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 24px;
+  padding: 48px 40px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+}
+.logo {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.logo h1 { font-size: 2rem; margin-bottom: 4px; }
+.logo p { opacity: 0.6; font-size: 0.9rem; }
+.tabs {
+  display: flex;
+  margin-bottom: 28px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 4px;
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+.tab.active {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  font-weight: 600;
+}
+.input-group {
+  margin-bottom: 16px;
+}
+.input-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.input-group input::placeholder { color: rgba(255,255,255,0.4); }
+.input-group input:focus { border-color: #a78bfa; }
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  margin-top: 8px;
+}
+.submit-btn:hover { transform: translateY(-2px); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.msg { text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; display: none; }
+.msg.error { background: rgba(239,68,68,0.2); color: #fca5a5; display: block; }
+.msg.success { background: rgba(34,197,94,0.2); color: #86efac; display: block; }
+.back-link {
+  text-align: center;
+  margin-top: 20px;
+}
+.back-link a {
+  color: #a78bfa;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.back-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="logo">
+    <h1>⚡ ZERO-G</h1>
+    <p>健身助手</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="login">登录</div>
+    <div class="tab" data-tab="register">注册</div>
+  </div>
+
+  <div id="msg" class="msg"></div>
+
+  <form id="login-form">
+    <div class="input-group">
+      <input type="text" id="login-username" placeholder="用户名" required>
+    </div>
+    <div class="input-group">
+      <input type="password" id="login-password" placeholder="密码" required>
+    </div>
+    <button type="submit" class="submit-btn">登录</button>
+  </form>
+
+  <form id="register-form" style="display:none">
+    <div class="input-group">
+      <input type="text" id="reg-username" placeholder="用户名" required>
+    </div>
+    <div class="input-group">
+      <input type="password" id="reg-password" placeholder="密码" required minlength="6">
+    </div>
+    <div class="input-group">
+      <input type="password" id="reg-password2" placeholder="确认密码" required>
+    </div>
+    <button type="submit" class="submit-btn">注册</button>
+  </form>
+</div>
+
+<script>
+const SERVER_URL = 'http://118.31.223.120:5000';
+
+function showMsg(text, type) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = 'msg ' + type;
+  setTimeout(() => { msg.className = 'msg'; }, 3000);
+}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const isLogin = tab.dataset.tab === 'login';
+    document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
+    document.getElementById('register-form').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('msg').className = 'msg';
+  });
+});
+
+// Login
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = e.target.querySelector('.submit-btn');
+
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+
+  try {
+    const res = await fetch(SERVER_URL + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('userId', username);
+      localStorage.setItem('authToken', data.token);
+      showMsg('登录成功！正在跳转...', 'success');
+      setTimeout(() => window.location.href = 'index app.html', 500);
+    } else {
+      showMsg(data.error || '登录失败', 'error');
+    }
+  } catch (err) {
+    showMsg('网络错误，请检查服务器连接', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '登录';
+});
+
+// Register
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const password2 = document.getElementById('reg-password2').value;
+  const btn = e.target.querySelector('.submit-btn');
+
+  if (password !== password2) {
+    showMsg('两次密码不一致', 'error');
+    return;
+  }
+  if (password.length < 6) {
+    showMsg('密码至少6位', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '注册中...';
+
+  try {
+    const res = await fetch(SERVER_URL + '/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showMsg('注册成功！请登录', 'success');
+      document.querySelector('.tab[data-tab="login"]').click();
+    } else {
+      showMsg(data.error || '注册失败', 'error');
+    }
+  } catch (err) {
+    showMsg('网络错误，请检查服务器连接', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '注册';
+});
+</script>
+</body>
+</html>

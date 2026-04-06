@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero-G 健身助手</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>⚡ ZERO-G 健身助手</h1>
+  <p>AI驱动 · 一站式健身管理平台</p>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button id="sync-btn" class="btn btn-sm">☁️ 同步</button>
+    <button id="logout-btn" class="btn btn-sm btn-ghost">🚪 退出</button>
+  </div>
+</header>
+
+<div id="content">
+
+  <!-- Tab 1: AI助手 -->
+  <div id="panel-ai" class="tab-panel active">
+    <div class="quick-btns">
+      <button class="btn btn-sm btn-ghost quick-btn" data-q="我想增肌，请为我制定详细的饮食和训练计划，每周可训练4天">💪 增肌计划</button>
+      <button class="btn btn-sm btn-ghost quick-btn" data-q="我想减脂，请为我制定饮食和训练计划，每周训练3天，饮食偏清淡">🔥 减脂计划</button>
+      <button class="btn btn-sm btn-ghost quick-btn" data-q="我想塑形，保持体重的同时提升肌肉线条，请给出建议">✨ 塑形建议</button>
+    </div>
+    <div id="chat-messages">
+      <div class="msg hint">你好！点击上方快捷按钮，或直接描述你的健身目标<br>AI将为你生成个性化食谱与训练计划</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="描述你的健身目标..." rows="1"></textarea>
+      <button id="chat-btn" class="btn">发送</button>
+    </div>
+  </div>
+
+  <!-- Tab 2: 热量计算 -->
+  <div id="panel-cal" class="tab-panel">
+    <div class="section glass" style="padding:14px">
+      <div class="food-search-row">
+        <input id="food-search" type="text" placeholder="搜索食物（如：鸡胸肉）" autocomplete="off">
+        <input id="food-grams" type="number" placeholder="克数" style="width:80px">
+        <button id="add-food-btn" class="btn btn-sm">添加</button>
+      </div>
+      <div id="food-suggestions"></div>
+      <div class="macro-row">
+        <div class="macro-card"><div class="val" id="macro-kcal">0</div><div class="lbl">热量(kcal)</div></div>
+        <div class="macro-card"><div class="val" id="macro-protein">0g</div><div class="lbl">蛋白质</div></div>
+        <div class="macro-card"><div class="val" id="macro-carbs">0g</div><div class="lbl">碳水</div></div>
+        <div class="macro-card"><div class="val" id="macro-fat">0g</div><div class="lbl">脂肪</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="today-header">
+        <span>今日饮食记录</span>
+        <span id="total-kcal" style="color:#a78bfa;font-weight:600">0 / 2000 kcal</span>
+      </div>
+      <div class="calorie-progress"><div class="calorie-progress-bar" id="calorie-bar" style="width:0%"></div></div>
+      <div id="food-log-list"></div>
+    </div>
+  </div>
+
+  <!-- Tab 3: 训练计划 -->
+  <div id="panel-workout" class="tab-panel">
+    <div class="plan-tabs">
+      <div class="plan-tab active" data-plan="muscle">💪 增肌</div>
+      <div class="plan-tab" data-plan="fat">🔥 减脂</div>
+      <div class="plan-tab" data-plan="shape">✨ 塑形</div>
+    </div>
+    <div id="workout-days"></div>
+  </div>
+
+  <!-- Tab 4: 休息建议 -->
+  <div id="panel-rest" class="tab-panel">
+    <div class="section glass" style="padding:14px">
+      <div class="section-title">今日睡眠质量</div>
+      <div class="slider-row">
+        <span style="font-size:0.8rem;opacity:0.5">差</span>
+        <input type="range" id="sleep-slider" min="1" max="10" value="7">
+        <span style="font-size:0.8rem;opacity:0.5">好</span>
+        <span class="slider-val" id="sleep-val">7</span>
+      </div>
+
+      <div class="section-title">今日训练强度</div>
+      <div class="slider-row">
+        <span style="font-size:0.8rem;opacity:0.5">低</span>
+        <input type="range" id="intensity-slider" min="1" max="10" value="5">
+        <span style="font-size:0.8rem;opacity:0.5">高</span>
+        <span class="slider-val" id="intensity-val">5</span>
+      </div>
+
+      <div class="section-title">肌肉酸痛部位</div>
+      <div class="sore-grid">
+        <button class="sore-btn" data-part="胸部">胸部</button>
+        <button class="sore-btn" data-part="背部">背部</button>
+        <button class="sore-btn" data-part="腿部">腿部</button>
+        <button class="sore-btn" data-part="肩部">肩部</button>
+        <button class="sore-btn" data-part="手臂">手臂</button>
+        <button class="sore-btn" data-part="核心">核心</button>
+      </div>
+
+      <button id="gen-rest-btn" class="btn" style="width:100%">生成恢复建议</button>
+    </div>
+
+    <div id="rest-advice" class="rest-advice" style="white-space:pre-wrap"></div>
+
+    <div class="section glass" style="padding:14px">
+      <div class="section-title">本周训练强度</div>
+      <div class="week-bars" id="week-bars"></div>
+    </div>
+  </div>
+
+</div>
+
+<nav id="tab-nav">
+  <button class="tab-btn active" data-tab="ai" onclick="switchTab('ai')">
+    <span class="icon">🤖</span>AI助手
+  </button>
+  <button class="tab-btn" data-tab="cal" onclick="switchTab('cal')">
+    <span class="icon">🥗</span>热量
+  </button>
+  <button class="tab-btn" data-tab="workout" onclick="switchTab('workout')">
+    <span class="icon">🏋️</span>训练
+  </button>
+  <button class="tab-btn" data-tab="rest" onclick="switchTab('rest')">
+    <span class="icon">😴</span>恢复
+  </button>
+</nav>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
